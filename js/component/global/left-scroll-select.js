@@ -3,13 +3,14 @@
  * 
  * 需要传入以下属性：
  * 
- * leftScrollSelectItems
- * 类型：数组
- * 格式：[name:选项名,itemBody:组件]
+ * items(必须)
+ * 类型：array
+ * 格式：[name:选项名,itemBody:react元素]
  * 说明：遍历左侧滚动选项名字
  */
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View,FlatList,TouchableOpacity,Modal} from 'react-native';
+import PropTypes from 'prop-types';
 
 const styles = StyleSheet.create({
     container:{
@@ -34,6 +35,11 @@ const styles = StyleSheet.create({
 
 export default class LeftScrollSelect extends Component{
 
+    // 属性验证器
+    static propTypes = {
+        items: PropTypes.arrayOf(PropTypes.object).isRequired
+    }
+
     constructor(props){
         super(props);
         this.state = {
@@ -50,14 +56,14 @@ export default class LeftScrollSelect extends Component{
     render(){
 
         // 获取父组件传入的左侧选项名
-        const leftScrollSelectItems = this.props.leftScrollSelectItems;
+        const items = this.props.items;
 
         // 选项对应的内容
         let itemBody;
-        for(i in leftScrollSelectItems){
+        for(i in items){
             // 取出对应item的内容
             if(this.state.selectItemKey == i){
-                itemBody = leftScrollSelectItems[i].itemBody;
+                itemBody = items[i].itemBody;
             }
         }
 
@@ -66,7 +72,7 @@ export default class LeftScrollSelect extends Component{
             <View style={styles.container}>
                 <View style={styles.containerLeft}>
                     <FlatList
-                        data={leftScrollSelectItems}
+                        data={items}
                         keyExtractor={(item,index)=>item.name}
                         renderItem={({item,index}) =>{
                             return(

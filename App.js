@@ -21,7 +21,7 @@ const pullDownSelectData = [
       menu:'menu1',
       menuBody:(
         <LeftScrollSelect 
-          leftScrollSelectItems={leftScrollSelectItems}
+          items = {leftScrollSelectItems}
         />
       )
     },
@@ -40,8 +40,8 @@ export default class App extends Component {
     return (
       <View style={styles.container}>
         <PullDownSelect
-          pullDownSelectBody = {pullDownSelectBody}
-          pullDownSelectData = {pullDownSelectData}
+          defaultBody = {pullDownSelectBody}
+          items = {pullDownSelectData}
         />
       </View>
     );

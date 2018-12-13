@@ -3,17 +3,18 @@
  * 
  * 需要传入以下属性：
  * 
- * pullDownSelectBody  
- * 类型：组件
+ * defaultBody(必须)  
+ * 类型：react element
  * 说明：默认显示主体内容
  * 
- * pullDownSelectData
- * 类型：数组  
- * 格式：[{menu:'菜单名',menuBody:'组件'}]
+ * items(必须) 
+ * 类型：array  
+ * 格式：[{menu:'菜单名',menuBody:react元素}]
  * 说明：遍历顶部菜单以及顶部菜单对应的主体内容
  */
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View,FlatList,TouchableOpacity,Modal} from 'react-native';
+import PropTypes from 'prop-types';
 
 const styles = StyleSheet.create({
     container:{
@@ -37,6 +38,12 @@ const styles = StyleSheet.create({
 
 
 export default class PullDownSelect extends Component{
+
+    // 属性验证器
+    static propTypes = {
+        items: PropTypes.arrayOf(PropTypes.object).isRequired,
+        defaultBody:PropTypes.element.isRequired
+    }
 
     constructor(props){
         super(props);
@@ -70,9 +77,9 @@ export default class PullDownSelect extends Component{
     render(){
 
         // 获取父组件传入的数据
-        const data = this.props.pullDownSelectData;
+        const data = this.props.items;
         // 获取父组件传入的内容主体
-        const body = this.props.pullDownSelectBody;
+        const body = this.props.defaultBody;
 
         // 菜单内容部分
         let menuBody;
