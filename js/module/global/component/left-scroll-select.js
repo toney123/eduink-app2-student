@@ -5,7 +5,7 @@
  * 
  * items(必须)
  * 类型：array
- * 格式：[name:选项名,itemBody:react元素]
+ * 格式：[{name:选项名,itemBody:react元素}]
  * 说明：遍历左侧滚动选项名字
  */
 import React, {Component} from 'react';
@@ -54,6 +54,7 @@ export default class LeftScrollSelect extends Component{
     }
 
     render(){
+
 
         // 获取父组件传入的左侧选项名
         const items = this.props.items;

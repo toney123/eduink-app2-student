@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View} from 'react-native';
-import PullDownSelect from './js/component/global/pull-down-select';
-import LeftScrollSelect from './js/component/global/left-scroll-select';
+import PullDownSelect from './js/module/global/component/pull-down-select';
+import LeftScrollSelect from './js/module/global/component/left-scroll-select';
 
 const styles = StyleSheet.create({
   container: {
@@ -37,6 +37,7 @@ const pullDownSelectBody = (
 
 export default class App extends Component {
   render() {
+
     return (
       <View style={styles.container}>
         <PullDownSelect
@@ -45,6 +46,7 @@ export default class App extends Component {
         />
       </View>
     );
+
   }
 }
 
