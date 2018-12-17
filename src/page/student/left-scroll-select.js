@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     },
     containerLeft:{
         flex:1,
-        backgroundColor:'#F5F5F5'
+        backgroundColor:'#F7F9FC'
     },
     containerRight:{
         flex:3,

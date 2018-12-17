@@ -1,5 +1,8 @@
+/**
+ * 学生主页
+ */
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View,Picker} from 'react-native';
+import {Platform, StyleSheet, Text, View,Picker,FlatList} from 'react-native';
 import PullDownSelect from '../../component/pull-down-select';
 import LeftScrollSelect from './left-scroll-select';
 import {host,schoolId,sessionToken} from '../../util/constant';
@@ -8,6 +11,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  groupContainer:{
+    flex:1,
+  },
+  groupContainerTop:{
+    flex:1,
+    flexDirection:'row',
+  },
+  groupContainerBottom:{
+    flex:12,
+    borderTopWidth:0.5,
+    borderColor:'#D3D7E0'
+  },
+  groupYearLeft:{
+    flex:1,
+  },
+  groupYearCenter:{
+    flex:6,
+    flexDirection:'row'
+  },
+  groupYearRight:{
+    flex:1
+  },
+  groupYear:{
+    flex:1,
+  },
+  groupYearText:{
+    textAlign:'center',
+    top:10,
+  },
+  groupYearSelect:{
+    flex:1,
+  },
+  groupYearSelectPicker:{
+    
+  }
 });
 
 
@@ -118,32 +156,39 @@ export default class Index extends Component {
       <View style={styles.container}>
         <PullDownSelect
           defaultBody = {(
-            <Text>body</Text>
+            <View style={{flex:1}}>
+              <FlatList
+                data={[{key: 'a'}, {key: 'b'}]}
+                renderItem={({item}) => <Text>{item.key}</Text>}
+              />
+            </View>
           )}
           items = {[
             {
-              menu:'Group',
+              menu:'GROUPS',
               menuBody:(
-                <View style={{flex:1}}>
-                  <View style={{flex:1,flexDirection:'row'}}>
-                    <View style={{flex:1}}></View>
-                    <View style={{flex:6,flexDirection:'row'}}>
-                      <View style={{flex:1}}>
-                        <Text>School Year</Text>
+                <View style={styles.groupContainer}>
+                  <View style={styles.groupContainerTop}>
+                    <View style={styles.groupYearLeft}></View>
+                    <View style={styles.groupYearCenter}>
+                      <View style={styles.groupYear}>
+                        <Text style={styles.groupYearText}>School Year</Text>
                       </View>
-                      <View style={{flex:4}}>
+                      <View style={styles.groupYearSelect}>
                         <Picker
-                          style={{height:18}}
-                          selectedValue = {this.state.selectYearId}
-                          onValueChange = {(itemValue, itemIndex)=>this._changeYearSelect(itemValue)}
-                        >
-                          {this.state.years.map((currentValue,index,arr)=>currentValue)}
+                            mode={'dropdown'}
+                            style={styles.groupYearSelectPicker}
+                            selectedValue = {this.state.selectYearId}
+                            onValueChange = {(itemValue, itemIndex)=>this._changeYearSelect(itemValue)}
+                          >
+                            {this.state.years.map((currentValue,index,arr)=>currentValue)}
                         </Picker>
                       </View>
+                        
                     </View>
-                    <View style={{flex:1}}></View>
+                    <View style={styles.groupYearRight}></View>
                   </View>
-                  <View style={{flex:12}}>
+                  <View style={styles.groupContainerBottom}>
                     <LeftScrollSelect 
                       items = {this.state.directories}
                     />
@@ -151,7 +196,7 @@ export default class Index extends Component {
                 </View>
               )
             },
-            {menu:'Tag',menuBody:(<Text>tag</Text>)},
+            {menu:'TAGS',menuBody:(<Text>tag</Text>)},
         ]}
         />
       </View>
