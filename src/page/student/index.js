@@ -14,88 +14,39 @@ const styles = StyleSheet.create({
   groupContainer:{
     flex:1,
   },
-  groupContainerTop:{
-    flex:1,
-    flexDirection:'row',
-  },
-  groupContainerBottom:{
-    flex:12,
-    borderTopWidth:0.5,
-    borderColor:'#D3D7E0'
-  },
-  groupYearLeft:{
-    flex:1,
-  },
-  groupYearCenter:{
-    flex:6,
-    flexDirection:'row'
-  },
-  groupYearRight:{
-    flex:1
-  },
-  groupYear:{
-    flex:1,
-  },
-  groupYearText:{
-    textAlign:'center',
-    top:10,
-  },
-  groupYearSelect:{
-    flex:1,
-  },
-  groupYearSelectPicker:{
-    
-  }
 });
 
-
+// 存储首次获取的所有根目录，以便更改年份时，直接筛选而不需要重新发请求
+let directoryData = [];
+// 存储首次获取的年份，用于判断与父组件年份选择的差异
+let yearId;
 
 export default class Index extends Component {
 
   constructor(props){
     super(props);
     this.state = {
-      selectYearId:0,
-      years:[],
       directories:[],
     }
+    // 存储首次获取的年份
+    yearId = global.yearId;
   }
 
   componentWillMount(){
-    fetch(host+'/sis/years', {
+    fetch(host+'/sis/directories', {
       method: "GET",
       headers: {
         'X-App-Id': schoolId,
         'X-Session-Token': sessionToken
       },
-      // body: JSON.stringify({
-      //   firstParam: "yourValue",
-      //   secondParam: "yourOtherValue"
-      // })
     }).then(response => {
       let data = JSON.parse(response._bodyInit);
+
       if(response.status == 200){
-        let currentYearId;
-        let years=[];
-        for(i in data){
-          years.push(
-            <Picker.Item key={i} label={data[i].name} value={data[i]._id} />
-          );
-          // 找出后端记录的当前年份
-          if(data[i].isCurrent == true){
-            currentYearId = data[i]._id;
-          }
-        }
-
-        // 更新年份选择
-        this._changeYearSelect(currentYearId);
-
-        this.setState({
-          selectYearId:currentYearId,
-          years:years
-        });
-
-      
+        // 存储首次获取的所有根目录
+        directoryData = data;
+        // 获取当前年份下的所有根目录
+        this._getDirectory();
       }else{
         alert(data.message);
       }
@@ -106,48 +57,29 @@ export default class Index extends Component {
 
   
   componentWillUpdate(){
-    
+    // 父组件更改年份时，触发更新
+    if(yearId != global.yearId){
+      this._getDirectory();
+      // 存储最新的年份
+      yearId = global.yearId;
+    }
   }
 
-  // 更改年份时触发的事件
-  _changeYearSelect(selectYearId){
-    // 刷新年份选择
+
+  // 获取目录
+  _getDirectory(){
+    let directories=[];
+      for(directory of directoryData){
+        // 筛选当前年份下的所有根目录
+        if(directory.year == global.yearId){       
+          directories.push(directory);
+        }
+    }
     this.setState({
-      selectYearId:selectYearId,
+      directories:directories,
     });
-
-    fetch(host+'/sis/directories', {
-      method: "GET",
-      headers: {
-        'X-App-Id': schoolId,
-        'X-Session-Token': sessionToken
-      },
-      // body: JSON.stringify({
-      //   firstParam: "yourValue",
-      //   secondParam: "yourOtherValue"
-      // })
-    }).then(response => {
-      let data = JSON.parse(response._bodyInit);
-      let directories=[];
-      if(response.status == 200){
-        for(i in data){
-          // 筛选年份
-          if(data[i].year == selectYearId){
-            directories.push(data[i]);
-          }
-        }      
-        // 刷新获取的学校目录数据
-        this.setState({
-          directories:directories,
-        });
-      }else{
-        alert(data.message);
-      }
-    }).catch(error => {
-      console.error(error);
-    });
-
   }
+
 
 
   render() {
@@ -168,36 +100,19 @@ export default class Index extends Component {
               menu:'GROUPS',
               menuBody:(
                 <View style={styles.groupContainer}>
-                  <View style={styles.groupContainerTop}>
-                    <View style={styles.groupYearLeft}></View>
-                    <View style={styles.groupYearCenter}>
-                      <View style={styles.groupYear}>
-                        <Text style={styles.groupYearText}>School Year</Text>
-                      </View>
-                      <View style={styles.groupYearSelect}>
-                        <Picker
-                            mode={'dropdown'}
-                            style={styles.groupYearSelectPicker}
-                            selectedValue = {this.state.selectYearId}
-                            onValueChange = {(itemValue, itemIndex)=>this._changeYearSelect(itemValue)}
-                          >
-                            {this.state.years.map((currentValue,index,arr)=>currentValue)}
-                        </Picker>
-                      </View>
-                        
-                    </View>
-                    <View style={styles.groupYearRight}></View>
-                  </View>
-                  <View style={styles.groupContainerBottom}>
-                    <LeftScrollSelect 
+                  <LeftScrollSelect 
                       items = {this.state.directories}
-                    />
-                  </View>
+                  />
                 </View>
               )
             },
-            {menu:'TAGS',menuBody:(<Text>tag</Text>)},
-        ]}
+            {
+              menu:'TAGS',
+              menuBody:(
+                <Text>tag</Text>
+              )
+            },
+          ]}
         />
       </View>
     );

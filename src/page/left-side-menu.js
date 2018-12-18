@@ -2,12 +2,13 @@
  * 全局左侧栏
  */
 import React, {Component} from 'react';
-import {StyleSheet,Text,View,ScrollView,TouchableOpacity,Image} from 'react-native';
+import {StyleSheet,Text,View,ScrollView,TouchableOpacity,Image,Picker} from 'react-native';
 import SideMenu from 'react-native-side-menu';
 import Student from './student/index';
 import Dashboard from './dashboard';
 import Directory from './directory';
 import Group from './group';
+import {host,schoolId,sessionToken} from '../util/constant';
 
 const iconUri = '../image/icon';
 
@@ -22,6 +23,15 @@ const styles = StyleSheet.create({
     menuContainerTop:{
         flex:1,
         backgroundColor:'#85A5FF'
+    },
+    menuYearTop:{
+        flex:2
+    },
+    menuYearCenter:{
+        flex:1,
+    },
+    menuYearBottom:{
+        flex:1
     },
     menuContainerBottom:{
         flex:2,
@@ -65,17 +75,25 @@ const styles = StyleSheet.create({
     myTouchText:{
         marginLeft:10,
         color:'#8890A6'
+    },
+    menuYearPicker:{
+        color:'#FFF'
     }
 });
 
+// 全局变量
+global.yearId;
 
 export default class LeftSideMenu extends Component{
 
     constructor(){
         super();
         this.state = {
-            page:Dashboard
+            page:Student,
+            years:[],
+            yearId:null
         }
+        
     }
 
     // 切换页面
@@ -85,15 +103,89 @@ export default class LeftSideMenu extends Component{
         });
     }
 
+    // 左侧栏状态
+    _sideMenuStatus(isOpen){
+        
+    }
+
+    componentWillMount(){
+        fetch(host+'/sis/years', {
+            method: "GET",
+            headers: {
+              'X-App-Id': schoolId,
+              'X-Session-Token': sessionToken
+            },
+          }).then(response => {
+            let data = JSON.parse(response._bodyInit);
+
+            if(response.status == 200){
+              let yearId;
+              let years=[];
+              for(i in data){
+                years.push(
+                  <Picker.Item key={i} label={data[i].name} value={data[i]._id} />
+                );
+                // 找当前年份
+                if(data[i].isCurrent == true){
+                    yearId = data[i]._id;
+                }
+              }
+
+              // 更新全局
+              global.yearId = yearId;
+
+              this.setState({
+                  years:years,
+                  yearId:yearId
+              });
+    
+            
+            }else{
+              alert(data.message);
+            }
+          }).catch(error => {
+            console.error(error);
+          });
+    }
+
+    // 切换年份
+    _switchYear(yearId){ 
+        // 更新全局变量
+        global.yearId = yearId;    
+
+        this.setState({
+            yearId:yearId
+        });
+       
+    }
+
+    componentDidUpdate(){
+        
+    }
+
 
     render(){
 
         const Page = this.state.page;
 
         return(
-            <SideMenu menu={(
+            <SideMenu 
+                onChange={(isOpen)=>this._sideMenuStatus(isOpen)}
+                menu={(
                 <View style={styles.menuContainer}>
-                    <View style={styles.menuContainerTop}></View>
+                    <View style={styles.menuContainerTop}>
+                        <View style={styles.menuYearTop}></View>
+                        <View style={styles.menuYearCenter}></View>
+                        <View style={styles.menuYearBottom}>
+                            <Picker
+                                selectedValue={this.state.yearId}
+                                style={styles.menuYearPicker}
+                                onValueChange={(itemValue, itemIndex) => this._switchYear(itemValue) }
+                                >
+                                {this.state.years}
+                            </Picker>
+                        </View>
+                    </View>
                     <View style={styles.menuContainerBottom}>
                         <View style={styles.menuListTop}>
                             <ScrollView style={styles.scrollMenu}>

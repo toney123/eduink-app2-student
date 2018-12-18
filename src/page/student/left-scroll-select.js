@@ -34,6 +34,9 @@ const styles = StyleSheet.create({
     }
 });
 
+// 存储首次获取的年份，用于判断与父组件年份选择的差异
+let yearId;
+
 export default class LeftScrollSelect extends Component{
 
     // 属性验证器
@@ -48,32 +51,19 @@ export default class LeftScrollSelect extends Component{
             groups:[]
         }
         this._getGroups = this._getGroups.bind(this);
+        // 存储首次获取的年份
+        yearId = global.yearId;
     }
 
 
     _getGroups(id){
-        let directoryId = id;
-
-        if(id == undefined){
-            let items = this.props.items;
-            if(items.length == 0){
-                return false;
-            }
-            // 取第一个为默认值
-            directoryId = items[0]._id;
-        }
-
-
-        fetch(host+'/sis/directories/'+directoryId+'/get-children-groups', {
+        
+        fetch(host+'/sis/directories/'+id+'/get-children-groups', {
             method: "GET",
             headers: {
               'X-App-Id': schoolId,
               'X-Session-Token': sessionToken
             },
-            // body: JSON.stringify({
-            //   firstParam: "yourValue",
-            //   secondParam: "yourOtherValue"
-            // })
           }).then(response => {
             let data = JSON.parse(response._bodyInit);
 
@@ -92,13 +82,17 @@ export default class LeftScrollSelect extends Component{
     }
 
     componentWillMount(){
-        this._getGroups();
+        // this._getGroups();
     }
 
     componentWillUpdate(){
-        // console.warn(this.props.items);
-        // this._getGroups();
-      
+        // // 父组件更改年份时，触发更新
+        // if(yearId != global.yearId){
+        //     this._getGroups();
+        //     // 存储最新的年份
+        //     yearId = global.yearId;
+        // }
+
     }
 
     _onClickItem(id){
@@ -112,6 +106,7 @@ export default class LeftScrollSelect extends Component{
 
     render(){
 
+
         let groups = this.state.groups;
         let body=[];
         for(i in groups){
@@ -119,7 +114,6 @@ export default class LeftScrollSelect extends Component{
                 <Text key={i}>{groups[i].name}</Text>
             );
         }
-
 
 
         return(
