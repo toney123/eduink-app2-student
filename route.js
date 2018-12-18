@@ -4,16 +4,16 @@
 import React, {Component} from 'react';
 import Index from './src/page/index';
 import Student from './src/page/student/index';
-import BottomBar from './src/page/bottom-bar';
+import LeftSideMenu from './src/page/left-side-menu';
 import { createStackNavigator, createAppContainer,createSwitchNavigator } from "react-navigation";
 
 // StackNavigator，允许返回
 const MainStack = createStackNavigator({
-    BottomBar: {
-        screen: BottomBar,
+    LeftSideMenu: {
+        screen: LeftSideMenu,
     }
 },{
-    initialRouteName:'BottomBar',
+    initialRouteName:'LeftSideMenu',
     defaultNavigationOptions:()=>({
         header:null
     }) 
