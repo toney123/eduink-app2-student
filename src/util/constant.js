@@ -1,6 +1,7 @@
 /**
  * 全局常量
  */
+"use strict";
 export const host = 'https://devapi.edu.ink';
 export const schoolId = 's001';
-export const sessionToken = 'FBOGd0k7LvwmhvpfhzPKrahBKQAz44fD';
+export const sessionToken = 'XVdKoCTxmNAituC6HFbfaS5cykowUEgf';

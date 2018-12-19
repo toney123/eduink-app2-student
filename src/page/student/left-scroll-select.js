@@ -8,6 +8,7 @@
  * 格式：
  * 说明：遍历左侧滚动选项名字
  */
+'use strict';
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View,FlatList,TouchableOpacity,Modal} from 'react-native';
 import PropTypes from 'prop-types';
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
         backgroundColor:'#F7F9FC'
     },
     containerRight:{
-        flex:3,
+        flex:1.6,
     },
     leftScrollTouchItem:{
        height:45,
@@ -31,12 +32,16 @@ const styles = StyleSheet.create({
     leftScrollTouchItemText:{
         top:10,
         textAlign:'center'
+    },
+    groupTouch:{
+        marginLeft:30,
+        marginTop:20,
+        marginBottom:10,
     }
 });
 
-// 存储首次获取的年份，用于判断与父组件年份选择的差异
-let yearId;
-
+// 存储首次获取的目录id，用于判断与父组件年份选择的差异
+let defaultDirectoryId;
 export default class LeftScrollSelect extends Component{
 
     // 属性验证器
@@ -51,52 +56,39 @@ export default class LeftScrollSelect extends Component{
             groups:[]
         }
         this._getGroups = this._getGroups.bind(this);
-        // 存储首次获取的年份
-        yearId = global.yearId;
     }
 
+    // 根据目录id获取所有group
+    async _getGroups(directoryId){
 
-    _getGroups(id){
-        
-        fetch(host+'/sis/directories/'+id+'/get-children-groups', {
-            method: "GET",
-            headers: {
-              'X-App-Id': schoolId,
-              'X-Session-Token': sessionToken
-            },
-          }).then(response => {
+        try {
+            let response = await fetch(
+                host+'/sis/directories/'+directoryId+'/get-children-groups', {
+                method: "GET",
+                headers: {
+                  'X-App-Id': schoolId,
+                  'X-Session-Token': sessionToken
+                },
+              });
+
             let data = JSON.parse(response._bodyInit);
 
             if(response.status == 200){
-              this.setState({
-                  groups:data
-              });
+                this.setState({
+                    groups:data
+                });
             }else{
-              alert(data.message);
+                alert(data.message);
             }
-          }).catch(error => {
+
+        } catch (error) {
             console.error(error);
-          });
-
-
-    }
-
-    componentWillMount(){
-        // this._getGroups();
-    }
-
-    componentWillUpdate(){
-        // // 父组件更改年份时，触发更新
-        // if(yearId != global.yearId){
-        //     this._getGroups();
-        //     // 存储最新的年份
-        //     yearId = global.yearId;
-        // }
+        }
 
     }
 
+     // 点击目录，获取对应的所有group
     _onClickItem(id){
-
         this._getGroups(id);
 
         this.setState({
@@ -104,16 +96,46 @@ export default class LeftScrollSelect extends Component{
         });
     }
 
+    // 点击group之后，保存筛选的group id
+    _clickGroup(id){ 
+        this.props.updateGroupFilter(id);
+    }
+
+    componentWillMount(){
+        let items = this.props.items;
+        if(items.length > 0){
+            // 用最新的第一个目录id去获取所有group
+            this._getGroups(items[0]._id);
+            // 存储首次获取的目录id，用于判断与父组件年份选择的差异
+            defaultDirectoryId = items[0]._id;
+        }
+    }
+
+    componentWillReceiveProps(nextProps){
+        let items = nextProps.items;
+        if(items.length > 0){
+            // 更改年份
+            if(defaultDirectoryId != items[0]._id){
+                // 用最新的第一个目录id去获取所有group
+                this._getGroups(items[0]._id);
+                // 用最新的目录id覆盖旧值，以便下次再判断
+                defaultDirectoryId = items[0]._id;
+            }
+            
+        }
+        
+    }
+
+   
+    componentWillUpdate(){
+
+    }
+
+
     render(){
 
-
-        let groups = this.state.groups;
-        let body=[];
-        for(i in groups){
-            body.push(
-                <Text key={i}>{groups[i].name}</Text>
-            );
-        }
+        let group = this.state.groups;
+        group.unshift({_id:-1,name:'All Groups'});
 
 
         return(
@@ -132,7 +154,18 @@ export default class LeftScrollSelect extends Component{
                     />
                 </View>
                 <View style={styles.containerRight}>
-                    {body.map((currentValue,index,arr)=>currentValue)}
+                    <FlatList
+                        data={group}
+                        keyExtractor={(item,index)=>item.name}
+                        renderItem={({item,index}) =>{
+                            
+                            return(
+                                <TouchableOpacity key={index} style={styles.groupTouch} onPress={()=>this._clickGroup(item._id)}>
+                                    <Text key={index}>{item.name}</Text>
+                                </TouchableOpacity>
+                            );
+                        }}
+                    />
                 </View>
             </View>
         );

@@ -30,9 +30,14 @@ const styles = StyleSheet.create({
     menuTouchText:{
         textAlign:'center',
         top:5,
+        color:'#7E8494',
+        fontWeight:'bold',
+        fontSize:12
     },
     containerBottom:{
-        flex:18,
+        flex:14,
+        borderTopWidth:0.8,
+        borderColor:'#D3D7E0'
     },
 });
 
@@ -53,6 +58,7 @@ export default class PullDownSelect extends Component{
                 open:false
             }
         }
+        this.updateMenuStatus = this.updateMenuStatus.bind(this);
     }
 
     // 菜单点击事件
@@ -69,6 +75,16 @@ export default class PullDownSelect extends Component{
             menuBodyStatus:{
                 key:key,
                 open:open
+            }
+        });
+    }
+
+    // 控制是否显示
+    updateMenuStatus(bool){
+        this.setState({
+            menuBodyStatus:{
+                key:this.state.menuBodyStatus.key,
+                open:bool
             }
         });
     }
@@ -97,12 +113,14 @@ export default class PullDownSelect extends Component{
                 if(this.state.menuBodyStatus.open){
                     // 显示对应菜单的内容
                     menuBody = data[i].menuBody;
+
                 }else{
                     // 无点击，则显示默认的内容
                     menuBody = body;
                 }
             }
         }
+
 
         return(
             <View style={styles.container}>

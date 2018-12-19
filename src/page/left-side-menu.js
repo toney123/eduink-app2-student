@@ -1,6 +1,7 @@
 /**
  * 全局左侧栏
  */
+"use strict";
 import React, {Component} from 'react';
 import {StyleSheet,Text,View,ScrollView,TouchableOpacity,Image,Picker} from 'react-native';
 import SideMenu from 'react-native-side-menu';
@@ -108,44 +109,46 @@ export default class LeftSideMenu extends Component{
         
     }
 
-    componentWillMount(){
-        fetch(host+'/sis/years', {
-            method: "GET",
-            headers: {
-              'X-App-Id': schoolId,
-              'X-Session-Token': sessionToken
-            },
-          }).then(response => {
+    async _getAllYears(){
+
+       try {
+            let response = await fetch(host+'/sis/years', {
+                method: "GET",
+                headers: {
+                'X-App-Id': schoolId,
+                'X-Session-Token': sessionToken
+                },
+            });
             let data = JSON.parse(response._bodyInit);
 
             if(response.status == 200){
-              let yearId;
-              let years=[];
-              for(i in data){
-                years.push(
-                  <Picker.Item key={i} label={data[i].name} value={data[i]._id} />
-                );
-                // 找当前年份
-                if(data[i].isCurrent == true){
-                    yearId = data[i]._id;
+                let yearId;
+                let years=[];
+                for(i in data){
+                    years.push(
+                        <Picker.Item key={i} label={data[i].name} value={data[i]._id} />
+                    );
+                    // 找当前年份
+                    if(data[i].isCurrent == true){
+                        yearId = data[i]._id;
+                    }
                 }
-              }
 
-              // 更新全局
-              global.yearId = yearId;
+                // 更新全局
+                global.yearId = yearId;
 
-              this.setState({
-                  years:years,
-                  yearId:yearId
-              });
-    
-            
+                this.setState({
+                    years:years,
+                    yearId:yearId
+                });
+
             }else{
-              alert(data.message);
+                alert(data.message);
             }
-          }).catch(error => {
-            console.error(error);
-          });
+       } catch (error) {
+           console.warn(error);
+       } 
+    
     }
 
     // 切换年份
@@ -157,6 +160,10 @@ export default class LeftSideMenu extends Component{
             yearId:yearId
         });
        
+    }
+
+    componentWillMount(){
+        this._getAllYears();
     }
 
     componentDidUpdate(){
