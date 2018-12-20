@@ -124,7 +124,7 @@ export default class LeftSideMenu extends Component{
             if(response.status == 200){
                 let yearId;
                 let years=[];
-                for(i in data){
+                for(let i in data){
                     years.push(
                         <Picker.Item key={i} label={data[i].name} value={data[i]._id} />
                     );
@@ -146,7 +146,7 @@ export default class LeftSideMenu extends Component{
                 alert(data.message);
             }
        } catch (error) {
-           console.warn(error);
+           console.error(error);
        } 
     
     }

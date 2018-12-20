@@ -99,6 +99,8 @@ export default class LeftScrollSelect extends Component{
     // 点击group之后，保存筛选的group id
     _clickGroup(id){ 
         this.props.updateGroupFilter(id);
+        // 隐藏筛选条件的面板
+        this.props.updatePullDownSelectStatus(false);
     }
 
     componentWillMount(){
