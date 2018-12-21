@@ -92,9 +92,10 @@ export default class LeftSideMenu extends Component{
         this.state = {
             page:Student,
             years:[],
-            yearId:null
+            yearId:null,
+            sideMenuStatus:false
         }
-        
+        this.updateSideMenuStatus = this.updateSideMenuStatus.bind(this);
     }
 
     // 切换页面
@@ -102,11 +103,21 @@ export default class LeftSideMenu extends Component{
         this.setState({
             page:pageName
         });
+        this.updateSideMenuStatus();
     }
 
-    // 左侧栏状态
-    _sideMenuStatus(isOpen){
-        
+    // 因打开左侧栏后，右边点任意处会关闭，手动点按钮关闭无效，则需矫正
+    _correctSideMenuStatus(isOpen){
+        this.setState({
+            sideMenuStatus:isOpen
+        });
+    }
+
+    // 更新左侧栏状态
+    updateSideMenuStatus(){
+        this.setState({
+            sideMenuStatus:!this.state.sideMenuStatus
+        });
     }
 
     async _getAllYears(){
@@ -159,7 +170,7 @@ export default class LeftSideMenu extends Component{
         this.setState({
             yearId:yearId
         });
-       
+        this.updateSideMenuStatus();
     }
 
     componentWillMount(){
@@ -177,7 +188,8 @@ export default class LeftSideMenu extends Component{
 
         return(
             <SideMenu 
-                onChange={(isOpen)=>this._sideMenuStatus(isOpen)}
+                isOpen={this.state.sideMenuStatus}
+                onChange={(isOpen)=>this._correctSideMenuStatus(isOpen)}
                 menu={(
                 <View style={styles.menuContainer}>
                     <View style={styles.menuContainerTop}>
@@ -225,7 +237,7 @@ export default class LeftSideMenu extends Component{
                 </View>
             )}>
                 <View style={styles.container}>
-                    <Page />
+                    <Page updateSideMenuStatus={this.updateSideMenuStatus} />
                 </View>
             </SideMenu>
         );

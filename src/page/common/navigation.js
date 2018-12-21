@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
         flex:1
     },
     containerCenter:{
-        flex:3,
+        flex:6,
     },
     containerRight:{
         flex:1

@@ -137,8 +137,10 @@ export default class LeftScrollSelect extends Component{
     render(){
 
         let group = this.state.groups;
-        group.unshift({_id:-1,name:'All Groups'});
-
+        if(group.length > 0){
+            group.unshift({_id:-1,name:'All Groups'});
+        }
+        
 
         return(
             <View style={styles.container}>
