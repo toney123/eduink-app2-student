@@ -7,6 +7,7 @@ import {Platform, StyleSheet, Text, View,Picker,FlatList,Image,TouchableOpacity,
 import LeftScrollSelect from './left-scroll-select';
 import {host,schoolId,sessionToken} from '../../util/constant';
 import Navigation from '../common/navigation';
+import I18n from '../../language/i18n';
 
 const iconUri = '../../image/icon';
 const imageUri = '../../image/';
@@ -14,11 +15,6 @@ const imageUri = '../../image/';
 // 获取真机的屏幕宽度
 const screenWidth = Dimensions.get('window').width;
 
-// 下拉框里的选项
-const pullDownSelectMenuData = [
-  {menu:'GROUP'},
-  {menu:'TAGS'},
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -109,14 +105,25 @@ const styles = StyleSheet.create({
       flex:1,
   },
   pullDownSelectMenuTouch:{
-      width:screenWidth/pullDownSelectMenuData.length
+      width:screenWidth/2,
+      flexDirection:'row'
+  },
+  pullDownSelectMenuTouchLeft:{
+    flex:1.8
+  },
+  pullDownSelectMenuTouchRight:{
+    flex:1
   },
   pullDownSelectMenuTouchText:{
-      textAlign:'center',
+      textAlign:'right',
       top:5,
       color:'#7E8494',
       fontWeight:'bold',
-      fontSize:12
+      fontSize:12,
+      marginRight:15,
+  },
+  pullDownSelectMenuTouchIcon:{
+    top:12,
   },
   pullDownSelectBody:{
       flex:14,
@@ -180,7 +187,12 @@ const styles = StyleSheet.create({
     top:12,
     width:20,
     height:20,
-  }
+  },
+  studentListTip:{
+    marginTop:20,
+    textAlign:'center',
+    color:'#606266'
+  },
 });
 
 
@@ -188,16 +200,27 @@ const styles = StyleSheet.create({
 let directoryData = [];
 // 存储首次获取的年份，用于判断与父组件年份选择的差异
 let yearId;
-// 选择的tag id
-let tagSelectedIds = [];
+// 选择的标签id
+let selectTagIds = [];
+// 选择的组id
+let selectGroupId;
+// 选择的组名
+let selectGroupName;
+// 当前选择的目录下的所有组
+let currentDirectoryGroups=[];
+
 export default class Index extends Component {
 
   constructor(props){
     super(props);
     this.state = {
+      // 暂存目录数据
       directories:[],
-      selectgroupId:null,
+      // 存储选择的group id
+      selectGroupId:selectGroupId,
+      // 存储获取的学生数据
       students:[],
+      // 存储获得的所有tag来用于显示
       tags:[],
       // 记录筛选面板是否要显示
       pullDownSelectBodyStatus:{
@@ -205,12 +228,15 @@ export default class Index extends Component {
         open:false
       },
       // 记录选择的tag
-      tagSelectedIds:tagSelectedIds
+      selectTagIds:selectTagIds,
+      // 选择的组名
+      selectGroupName:selectGroupName,
     }
     // 存储首次获取的年份
     yearId = global.yearId;
     this.updateGroupFilter = this.updateGroupFilter.bind(this);
     this.updatePullDownSelectStatus = this.updatePullDownSelectStatus.bind(this);
+    this.storeCurrentDirectoryGroups = this.storeCurrentDirectoryGroups.bind(this);
   }
 
   // 获取所有目录
@@ -257,8 +283,45 @@ export default class Index extends Component {
 
   // 获取学生
   async _getStudents(){
+    let url='?pageSize=50';
+    let params={};
+
+    // 选择当前目录下的所有组
+    if(selectGroupId == -1){
+      let groupIds=[];
+      currentDirectoryGroups.map((value,index,arr)=>{
+        // 剔除
+        if(value._id != -1){
+          groupIds.push(value._id);
+        }
+      });
+       params["_class"]={
+        "$in":groupIds
+      };
+    }
+    
+    // 存在选择的group id
+    if(selectGroupId!=undefined && selectGroupId!= -1){
+      params["_class"]={
+        "$in":[selectGroupId]
+      };
+    }
+    
+    // 存在选择的tag id
+    if(selectTagIds.length){
+      params["tags"]={
+        "$all":selectTagIds
+      }
+    }
+
+    // 如果有查询参数，则拼接
+    if(Object.keys(params).length){
+      url = url +'&q='+ JSON.stringify(params);
+    }
+
+  
     try {
-      let response = await fetch(host+'/sis/students', {
+      let response = await fetch(host+'/sis/students'+url, {
         method: "GET",
         headers: {
           'X-App-Id': schoolId,
@@ -302,11 +365,19 @@ export default class Index extends Component {
   }
 
   // 保存筛选group的数据
-  updateGroupFilter(selectgroupId){
-    this.setState({
-      selectgroupId:selectgroupId
-    });
+  updateGroupFilter(id,name){
+    // 用于在选项栏中显示选中的组名
+    selectGroupName = name;
+    // 用于筛选学生
+    selectGroupId = id;
+    this._getStudents();
   }
+
+  // 存储当前选择目录下的所有组
+  storeCurrentDirectoryGroups(data){
+    currentDirectoryGroups = data;
+  }
+
 
    // 下拉菜单点击事件
    _clickPullDownSelectMenu(key){
@@ -326,25 +397,27 @@ export default class Index extends Component {
     }); 
   }
 
+  // 选择tag，用于筛选学生列表
   _clickTag(tagId){
-    const arrayIndex = tagSelectedIds.indexOf(tagId);
+    const arrayIndex = selectTagIds.indexOf(tagId);
     // 如果数组不存在指定值，则存入
     if(arrayIndex == -1){
-      tagSelectedIds.push(tagId);
+      selectTagIds.push(tagId);
     }else{
       // 删除指定元素
-      tagSelectedIds.splice(arrayIndex,1);
+      selectTagIds.splice(arrayIndex,1);
     }
+    
     this.setState({
-      tagSelectedIds:tagSelectedIds
+      selectTagIds:selectTagIds
     });
+    this._getStudents();
   }
 
 
-  // 确认筛选的tag
+  // 确认筛选的tag，此处只是隐藏筛选tag面板
   _submitTag(){
     this.updatePullDownSelectStatus(false);
-    // console.warn(tagSelectedIds);
   }
 
   // 控制是否显示条件筛选面板
@@ -358,8 +431,11 @@ export default class Index extends Component {
   }
 
   componentWillMount(){
+    // 获取学生列表
     this._getStudents();
+    // 获取所有目录
     this._getAllDirectories();
+    // 获取所有tag
     this._getTags();
   }
 
@@ -367,19 +443,36 @@ export default class Index extends Component {
   componentWillUpdate(){
     // 父组件更改年份时，触发更新
     if(yearId != global.yearId){
+      // 更改年份后，恢复选项栏中默认的组名
+      selectGroupName = undefined;
+      // 刷新目录
       this._getCurrentDirectories();
+      // 刷新学生列表
+      this._getStudents();
       // 存储最新的年份
       yearId = global.yearId;
     }
   }
 
+  componentWillUnmount(){
+    
+  }
+
+
 
   render() {
 
     let pullDownSelectBody;
+    // 默认组名
+    let menuGroupName = I18n.t('student.group');
+    // 如有选择的组名，则显示
+    if(selectGroupName != undefined){
+      menuGroupName = selectGroupName;
+    }
 
-
+    // 选项栏打开
     if(this.state.pullDownSelectBodyStatus.open){
+      // 第一个选项面板
       if(this.state.pullDownSelectBodyStatus.key == 0 ){
         pullDownSelectBody=(
           <View style={styles.groupContainer}>
@@ -387,6 +480,7 @@ export default class Index extends Component {
                 updatePullDownSelectStatus = {this.updatePullDownSelectStatus}
                 updateGroupFilter = {this.updateGroupFilter} 
                 items = {this.state.directories}
+                storeCurrentDirectoryGroups = {this.storeCurrentDirectoryGroups}
             />
           </View>
         );
@@ -402,7 +496,7 @@ export default class Index extends Component {
                 renderItem={({item}) =>{
                   let tagText;
                   // 存在选中值
-                  if(this.state.tagSelectedIds.indexOf(item._id) >= 0){
+                  if(this.state.selectTagIds.indexOf(item._id) >= 0){
                     tagText=(
                       <View style={styles.tagTouchList}>
                         <View style={styles.tagTouchListLeft}>
@@ -437,7 +531,7 @@ export default class Index extends Component {
                 <View style={styles.tagSubmitLeft}></View>
                 <View style={styles.tagSubmitCenter}>
                   <TouchableOpacity style={styles.tabSubmitTouch} onPress={()=>this._submitTag()}>
-                    <Text style={styles.tabSubmitText}>Submit</Text>
+                    <Text style={styles.tabSubmitText}>{I18n.t('student.submit')}</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.tagSubmitRight}></View>
@@ -448,13 +542,16 @@ export default class Index extends Component {
       }
     }else{
       // 没有打开筛选条件的面板时显示的页面
-      pullDownSelectBody=(
-        <View style={styles.mainContainer}>
+
+      let studentListBody;
+      // 存在数据
+      if(this.state.students.length){
+        studentListBody = (
           <FlatList
             data={this.state.students}
             onRefresh={()=>{}}
             refreshing={false}
-            keyExtractor={(item,index)=>item.firstName + item.lastName}
+            keyExtractor={(item,index)=>item._id.toString()}
             renderItem={({item,index}) => {
               return(
                 <TouchableOpacity style={styles.mainBody}>
@@ -477,6 +574,16 @@ export default class Index extends Component {
               );
             }}
           />
+        );
+      }else{
+        studentListBody=(
+          <Text style={styles.studentListTip}>{I18n.t('student.noData')}</Text>
+        );
+      }
+      
+      pullDownSelectBody=(
+        <View style={styles.mainContainer}>
+          {studentListBody}
         </View>
       );
     }
@@ -495,7 +602,7 @@ export default class Index extends Component {
             )}
             centerBody={(       
               <View style={styles.navigationCenterBody}>
-                <Text style={styles.navigationCenterBodyText}>Students</Text>
+                <Text style={styles.navigationCenterBodyText}>{I18n.t('student.students')}</Text>
               </View>       
             )}
             rightBody={
@@ -510,13 +617,30 @@ export default class Index extends Component {
         <View style={styles.containerBottom}>
           <View style={styles.pullDownSelectMenu}>
               <FlatList
-                data={pullDownSelectMenuData}
+                // 下拉框里的选项
+                data={[
+                  {menu:menuGroupName},
+                  {menu:I18n.t('student.tags')},
+                ]}
                 horizontal={true}
                 keyExtractor={(item,index)=>item.menu}
                 renderItem={({item,index}) => {
+                  // 默认箭头向下，表示还没打开筛选面板
+                  let icon = require(iconUri+'/down.png');
+                  if(this.state.pullDownSelectBodyStatus.key == index){
+                    if(this.state.pullDownSelectBodyStatus.open){
+                      icon = require(iconUri+'/up.png');
+                    }
+                  }
+
                   return(
                     <TouchableOpacity key={index} style={styles.pullDownSelectMenuTouch} onPress={()=>this._clickPullDownSelectMenu(index)} >
-                      <Text style={styles.pullDownSelectMenuTouchText}>{item.menu}</Text>
+                      <View style={styles.pullDownSelectMenuTouchLeft}>
+                        <Text style={styles.pullDownSelectMenuTouchText}>{item.menu}</Text>
+                      </View>
+                      <View style={styles.pullDownSelectMenuTouchRight}>
+                        <Image style={styles.pullDownSelectMenuTouchIcon} source={icon}></Image>
+                      </View>
                     </TouchableOpacity>
                   );
                 }}

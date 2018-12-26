@@ -1,0 +1,15 @@
+{
+    "leftSideMenu":{
+        "dashboard":"首頁",
+        "students":"學生",
+        "directories":"目錄",
+        "groups":"群組"
+    },
+    "student":{
+        "group":"群組",
+        "tags":"標簽",
+        "students":"學生",
+        "submit":"提交",
+        "noData":"暫無資料"
+    }
+}

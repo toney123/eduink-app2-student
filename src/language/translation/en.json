@@ -1,0 +1,15 @@
+{
+    "leftSideMenu":{
+        "dashboard":"Dashboard",
+        "students":"Students",
+        "directories":"Directories",
+        "groups":"Groups"
+    },
+    "student":{
+        "group":"Group",
+        "tags":"TAGS",
+        "students":"Students",
+        "submit":"Submit",
+        "noData":"No Data"
+    }
+}

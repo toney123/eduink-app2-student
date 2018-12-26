@@ -10,6 +10,7 @@ import Dashboard from './dashboard';
 import Directory from './directory';
 import Group from './group';
 import {host,schoolId,sessionToken} from '../util/constant';
+import I18n from '../language/i18n';
 
 const iconUri = '../image/icon';
 
@@ -38,12 +39,18 @@ const styles = StyleSheet.create({
         flex:2,
     },
     menuListTop:{
-        flex:7
+        flex:2
     },
     menuListCenter:{
         flex:1,
     },
     menuListBottom:{
+        flex:1
+    },
+    menuMyTop:{
+        flex:1
+    },
+    menuMyBottom:{
         flex:1
     },
     scrollMenu:{
@@ -62,6 +69,19 @@ const styles = StyleSheet.create({
     scrollMenuTouchText:{
         marginLeft:20,
         marginTop:3,
+        color:'#8890A6'
+    },
+    transformTouch:{
+        marginTop:6,
+        marginLeft:10,
+        flexDirection:'row'
+    },
+    transformTouchIcon:{
+        width:25,
+        height:25
+    },
+    transformTouchText:{
+        marginLeft:10,
         color:'#8890A6'
     },
     myTouch:{
@@ -93,7 +113,9 @@ export default class LeftSideMenu extends Component{
             page:Student,
             years:[],
             yearId:null,
-            sideMenuStatus:false
+            sideMenuStatus:false,
+            language:'en',
+            languageName:'English'
         }
         this.updateSideMenuStatus = this.updateSideMenuStatus.bind(this);
     }
@@ -173,6 +195,23 @@ export default class LeftSideMenu extends Component{
         this.updateSideMenuStatus();
     }
 
+    // 转换语言
+    _translate(){
+        let language;
+        let languageName;
+        if(this.state.language == 'en'){
+            language = 'zh';
+            languageName = '中文';
+        }else{
+            language = 'en';
+            languageName = 'English';
+        }
+        this.setState({
+            language:language,
+            languageName:languageName
+        });
+    }
+
     componentWillMount(){
         this._getAllYears();
     }
@@ -183,6 +222,9 @@ export default class LeftSideMenu extends Component{
 
 
     render(){
+
+        // 切换语言
+        I18n.locale = this.state.language;
 
         const Page = this.state.page;
 
@@ -210,28 +252,36 @@ export default class LeftSideMenu extends Component{
                             <ScrollView style={styles.scrollMenu}>
                                 <TouchableOpacity style={styles.scrollMenuTouch} onPress={()=>this._switchPage(Dashboard)}>
                                     <Image style={styles.scrollMenuTouchIcon} source={require(iconUri+'/dashboard.png')}></Image>
-                                    <Text style={styles.scrollMenuTouchText}>Dashboard</Text>
+                                    <Text style={styles.scrollMenuTouchText}>{I18n.t('leftSideMenu.dashboard')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.scrollMenuTouch} onPress={()=>this._switchPage(Student)}>
                                     <Image style={styles.scrollMenuTouchIcon} source={require(iconUri+'/student.png')}></Image>
-                                    <Text style={styles.scrollMenuTouchText}>Students</Text>
+                                    <Text style={styles.scrollMenuTouchText}>{I18n.t('leftSideMenu.students')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.scrollMenuTouch} onPress={()=>this._switchPage(Directory)}>
                                     <Image style={styles.scrollMenuTouchIcon} source={require(iconUri+'/directory.png')}></Image>
-                                    <Text style={styles.scrollMenuTouchText}>Directories</Text>
+                                    <Text style={styles.scrollMenuTouchText}>{I18n.t('leftSideMenu.directories')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.scrollMenuTouch} onPress={()=>this._switchPage(Group)}>
                                     <Image style={styles.scrollMenuTouchIcon} source={require(iconUri+'/group.png')}></Image>
-                                    <Text style={styles.scrollMenuTouchText}>Groups</Text>
+                                    <Text style={styles.scrollMenuTouchText}>{I18n.t('leftSideMenu.groups')}</Text>
                                 </TouchableOpacity>
                             </ScrollView>
                         </View>
                         <View style={styles.menuListCenter}></View>
                         <View style={styles.menuListBottom}>
-                            <TouchableOpacity style={styles.myTouch}>
-                                <Image style={styles.myTouchIcon} source={require(iconUri+'/my.png')}></Image>
-                                <Text style={styles.myTouchText}>Toney</Text>
-                            </TouchableOpacity>
+                            <View style={styles.menuMyTop}>
+                                <TouchableOpacity style={styles.myTouch}>
+                                    <Image style={styles.myTouchIcon} source={require(iconUri+'/my.png')}></Image>
+                                    <Text style={styles.myTouchText}>Toney</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.menuMyBottom}>
+                                <TouchableOpacity style={styles.transformTouch} onPress={()=>this._translate()}>
+                                    <Image style={styles.transformTouchIcon} source={require(iconUri+'/translate.png')}></Image>
+                                    <Text style={styles.transformTouchText}>{this.state.languageName}</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </View>

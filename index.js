@@ -2,6 +2,6 @@
  * 初始页
  */
 import {AppRegistry} from 'react-native';
-import Route from './route';
+import Config from './config';
 
-AppRegistry.registerComponent('eduink_student', () => Route);
+AppRegistry.registerComponent('eduink_student', () => Config);

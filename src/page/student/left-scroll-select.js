@@ -33,6 +33,13 @@ const styles = StyleSheet.create({
         top:10,
         textAlign:'center'
     },
+    leftScrollTouchItemTextClick:{
+        top:10,
+        textAlign:'center',
+        color:'#85A5FF',
+        borderRightWidth:3,
+        borderColor:'#85A5FF'
+    },
     groupTouch:{
         marginLeft:30,
         marginTop:20,
@@ -42,6 +49,14 @@ const styles = StyleSheet.create({
 
 // 存储首次获取的目录id，用于判断与父组件年份选择的差异
 let defaultDirectoryId;
+// 存储选择目录的id
+let selectDirectoryId;
+// 存储当前选择的目录名
+let selectDirectoryName;
+// 存储选择group的id
+let selectGroupId;
+
+
 export default class LeftScrollSelect extends Component{
 
     // 属性验证器
@@ -52,7 +67,8 @@ export default class LeftScrollSelect extends Component{
     constructor(props){
         super(props);
         this.state = {
-            selectItemId:0,
+            selectDirectoryId:selectDirectoryId,
+            selectGroupId:selectGroupId,
             groups:[]
         }
         this._getGroups = this._getGroups.bind(this);
@@ -60,7 +76,6 @@ export default class LeftScrollSelect extends Component{
 
     // 根据目录id获取所有group
     async _getGroups(directoryId){
-
         try {
             let response = await fetch(
                 host+'/sis/directories/'+directoryId+'/get-children-groups', {
@@ -74,6 +89,10 @@ export default class LeftScrollSelect extends Component{
             let data = JSON.parse(response._bodyInit);
 
             if(response.status == 200){
+                // 存当前选择目录下的所有组，用于all groups筛选
+                this.props.storeCurrentDirectoryGroups(data);
+  
+
                 this.setState({
                     groups:data
                 });
@@ -91,46 +110,65 @@ export default class LeftScrollSelect extends Component{
     _onClickItem(id){
         this._getGroups(id);
 
+        selectDirectoryId = id;
+
         this.setState({
-            selectItemId:id
+            selectDirectoryId:selectDirectoryId
         });
     }
 
     // 点击group之后，保存筛选的group id
-    _clickGroup(id){ 
-        this.props.updateGroupFilter(id);
+    _clickGroup(id,name){
+        let selectName = name; 
+        // 全选则用目录名替换
+        if(id == -1){   
+            selectName = selectDirectoryName;
+        }
+        this.props.updateGroupFilter(id,selectName);
+
         // 隐藏筛选条件的面板
         this.props.updatePullDownSelectStatus(false);
     }
 
     componentWillMount(){
-        let items = this.props.items;
-        if(items.length > 0){
-            // 用最新的第一个目录id去获取所有group
-            this._getGroups(items[0]._id);
-            // 存储首次获取的目录id，用于判断与父组件年份选择的差异
-            defaultDirectoryId = items[0]._id;
+        // 存在存储的目录id时则直接读取
+        if(selectDirectoryId != undefined){
+            this._getGroups(selectDirectoryId);
+        }else{
+            let items = this.props.items;
+            if(items.length > 0){
+                // 用最新的第一个目录id去获取所有group
+                this._getGroups(items[0]._id);
+                // 存储首次获取的目录id，用于判断与父组件年份选择的差异
+                defaultDirectoryId = items[0]._id;
+            }
         }
     }
 
     componentWillReceiveProps(nextProps){
         let items = nextProps.items;
-        if(items.length > 0){
-            // 更改年份
-            if(defaultDirectoryId != items[0]._id){
-                // 用最新的第一个目录id去获取所有group
-                this._getGroups(items[0]._id);
-                // 用最新的目录id覆盖旧值，以便下次再判断
-                defaultDirectoryId = items[0]._id;
+            if(items.length > 0){
+                // 更改年份
+                if(defaultDirectoryId != items[0]._id){
+                    // 用最新的第一个目录id去获取所有group
+                    this._getGroups(items[0]._id);
+                    // 用最新的目录id覆盖旧值，以便下次再判断
+                    defaultDirectoryId = items[0]._id;
+                    this.setState({
+                        selectDirectoryId:defaultDirectoryId
+                    });
+                }
+                
             }
-            
-        }
-        
     }
 
    
     componentWillUpdate(){
 
+    }
+
+    componentWillUnmount(){
+        
     }
 
 
@@ -140,18 +178,30 @@ export default class LeftScrollSelect extends Component{
         if(group.length > 0){
             group.unshift({_id:-1,name:'All Groups'});
         }
-        
-
+  
         return(
             <View style={styles.container}>
                 <View style={styles.containerLeft}>
                     <FlatList
                         data={this.props.items}
-                        keyExtractor={(item,index)=>item.name}
+                        extraData={this.state}
+                        keyExtractor={(item,index)=>item._id.toString()}
                         renderItem={({item,index}) =>{
+                            let itemStyle = styles.leftScrollTouchItemText;
+                            // 首次进入，默认选中第一项
+                            if(this.state.selectDirectoryId == undefined){
+                                if(index == 0){
+                                    selectDirectoryName = item.name;
+                                    itemStyle = styles.leftScrollTouchItemTextClick;
+                                }
+                            // 其余情况根据点击，显示相应的样式
+                            }else if(this.state.selectDirectoryId == item._id){
+                                selectDirectoryName = item.name;
+                                itemStyle = styles.leftScrollTouchItemTextClick;
+                            }
                             return(
                                 <TouchableOpacity key={index} onPress={()=>this._onClickItem(item._id)} style={styles.leftScrollTouchItem}>
-                                    <Text style={styles.leftScrollTouchItemText}>{item.name}</Text>
+                                    <Text style={itemStyle}>{item.name}</Text>
                                 </TouchableOpacity>
                             );
                         }}
@@ -160,12 +210,11 @@ export default class LeftScrollSelect extends Component{
                 <View style={styles.containerRight}>
                     <FlatList
                         data={group}
-                        keyExtractor={(item,index)=>item.name}
+                        keyExtractor={(item,index)=>item._id.toString()}
                         renderItem={({item,index}) =>{
-                            
                             return(
-                                <TouchableOpacity key={index} style={styles.groupTouch} onPress={()=>this._clickGroup(item._id)}>
-                                    <Text key={index}>{item.name}</Text>
+                                <TouchableOpacity key={index} style={styles.groupTouch} onPress={()=>this._clickGroup(item._id,item.name)}>
+                                    <Text>{item.name}</Text>
                                 </TouchableOpacity>
                             );
                         }}
