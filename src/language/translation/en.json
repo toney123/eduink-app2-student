@@ -10,6 +10,10 @@
         "tags":"TAGS",
         "students":"Students",
         "submit":"Submit",
-        "noData":"No Data"
+        "noData":"No Data",
+        "refNo":"Ref No.",
+        "firstName":"First Name",
+        "lastName":"Last Name",
+        "search":"Search"
     }
 }

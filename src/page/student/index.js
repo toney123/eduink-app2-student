@@ -3,7 +3,7 @@
  */
 "use strict";
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View,Picker,FlatList,Image,TouchableOpacity,Dimensions,ScrollView } from 'react-native';
+import {Platform, StyleSheet, Text, View,Picker,FlatList,Image,TouchableOpacity,Dimensions,ScrollView,Modal,TextInput} from 'react-native';
 import LeftScrollSelect from './left-scroll-select';
 import {host,schoolId,sessionToken} from '../../util/constant';
 import Navigation from '../common/navigation';
@@ -29,6 +29,60 @@ const styles = StyleSheet.create({
   containerBottom:{
     flex:14,
   },
+  search:{
+    flex:1,
+    flexDirection:'row'
+  },
+  searchLeft:{
+    flex:1,
+  },
+  searchCenter:{
+    flex:12,
+  },
+  searchTop:{
+    flex:1
+  },
+  searchBottom:{
+    flex:10,
+  },
+  searchForm:{
+    flexDirection:'row'
+  },
+  searchPicker:{
+    flex:1
+  },
+  searchInput:{
+    flex:1.5
+  },
+  selectSearchType:{
+    height:30,
+  },
+  searchTouch:{
+    marginTop:30,
+    alignSelf:'center',
+    borderColor:'#85A5FF',
+    backgroundColor:'#85A5FF',
+    borderWidth:1,
+    borderRadius:50,
+    flex:1,
+    // width:130,
+    // height:40,
+    // 跟主轴方向对齐
+    justifyContent:'center',
+  },
+  searchTouchText:{
+    color:'#FFF',
+    fontWeight:'bold',
+    alignSelf:'center'
+  },
+  searchRight:{
+    flex:1
+  },
+  searchTextInput:{
+    borderBottomWidth:1,
+    borderColor:'#D3D7E0',
+    padding:0
+  },
   navigationCenterBody:{
     flex:1,
   },
@@ -49,6 +103,11 @@ const styles = StyleSheet.create({
     top:2,
     width:15,
     height:15,
+  },
+  navigationLeftBackIcon:{
+    top:2,
+    width:25,
+    height:18
   },
   navigationRightIconTouch:{
     top:10,
@@ -231,6 +290,12 @@ export default class Index extends Component {
       selectTagIds:selectTagIds,
       // 选择的组名
       selectGroupName:selectGroupName,
+      // 获取学生数据时的状态
+      getStudentStatus:false,
+      // 是否显示搜索
+      searchStatus:false,
+      // 默认搜索类型
+      selectSearchValue:'refNo'
     }
     // 存储首次获取的年份
     yearId = global.yearId;
@@ -328,6 +393,9 @@ export default class Index extends Component {
           'X-Session-Token': sessionToken
         },
       });
+
+      // 停止显示刷新学生列表的动画
+      this.setState({getStudentStatus:false});
 
       let data = JSON.parse(response._bodyInit);
 
@@ -542,15 +610,21 @@ export default class Index extends Component {
       }
     }else{
       // 没有打开筛选条件的面板时显示的页面
-
-      let studentListBody;
-      // 存在数据
-      if(this.state.students.length){
-        studentListBody = (
+      pullDownSelectBody=(
+        <View style={styles.mainContainer}>
           <FlatList
             data={this.state.students}
-            onRefresh={()=>{}}
-            refreshing={false}
+            onRefresh={()=>{
+              // 显示加载动画
+              this.setState({getStudentStatus:true});
+              this._getStudents();
+            }}
+            // 根据状态是否显示加载动画
+            refreshing={this.state.getStudentStatus}
+            // onEndReachedThreshold={1}
+            // onEndReached={()=>console.warn(123)}
+            // 当数据为空时，显示此组件
+            ListEmptyComponent={<Text style={styles.studentListTip}>{I18n.t('student.noData')}</Text>}
             keyExtractor={(item,index)=>item._id.toString()}
             renderItem={({item,index}) => {
               return(
@@ -574,16 +648,6 @@ export default class Index extends Component {
               );
             }}
           />
-        );
-      }else{
-        studentListBody=(
-          <Text style={styles.studentListTip}>{I18n.t('student.noData')}</Text>
-        );
-      }
-      
-      pullDownSelectBody=(
-        <View style={styles.mainContainer}>
-          {studentListBody}
         </View>
       );
     }
@@ -607,7 +671,7 @@ export default class Index extends Component {
             )}
             rightBody={
               <View style={styles.navigationRightBody}>
-                <TouchableOpacity style={styles.navigationRightIconTouch}>
+                <TouchableOpacity style={styles.navigationRightIconTouch} onPress={()=>this.setState({searchStatus:true})}>
                   <Image style={styles.navigationRightIcon} source={require(iconUri+'/search.png')} />
                 </TouchableOpacity>
               </View>
@@ -647,6 +711,59 @@ export default class Index extends Component {
               />
           </View>
           <View style={styles.pullDownSelectBody}>
+                <Modal
+                  visible={this.state.searchStatus}
+                  onRequestClose={()=>this.setState({searchStatus:false})}
+                  animationType='slide'
+                  presentationStyle='fullScreen'
+                >
+                  <View style={styles.container}>
+                    <View style={styles.containerTop}>
+                      <Navigation
+                        leftBody={
+                          <View style={styles.navigationLeftBody}>
+                            <TouchableOpacity style={styles.navigationLeftIconTouch} onPress={()=>this.setState({searchStatus:false})}>
+                              <Image style={styles.navigationLeftBackIcon} source={require(iconUri+'/back.png')}></Image>
+                            </TouchableOpacity>
+                          </View>
+                        }
+                      />
+                    </View>
+                    <View style={styles.containerBottom}>
+                      <View style={styles.search}>
+                        <View style={styles.searchLeft}></View>
+                        <View style={styles.searchCenter}>
+                          <View style={styles.searchTop}></View>
+                          <View style={styles.searchBottom}>
+                            
+                            <View style={styles.searchForm}>
+                              <View style={styles.searchPicker}>
+                                <Picker
+                                  selectedValue={this.state.selectSearchValue}
+                                  style={styles.selectSearchType}
+                                  onValueChange={(itemValue, itemIndex) => this.setState({selectSearchValue:itemValue})}
+                                >
+                                  <Picker.Item label={I18n.t('student.refNo')} value="refNo" />
+                                  <Picker.Item label={I18n.t('student.firstName')} value="firstName" />
+                                  <Picker.Item label={I18n.t('student.lastName')} value="lastName" />
+                                </Picker>
+                              </View>
+                              <View style={styles.searchInput}>
+                                <TextInput style={styles.searchTextInput}></TextInput>
+                              </View>
+                            </View>
+
+                            <TouchableOpacity style={styles.searchTouch}>
+                              <Text style={styles.searchTouchText}>{I18n.t('student.search')}</Text>
+                            </TouchableOpacity>
+
+                          </View>
+                        </View>
+                        <View style={styles.searchRight}></View>
+                      </View>
+                    </View>
+                  </View>
+                </Modal> 
               {pullDownSelectBody}
           </View>
 

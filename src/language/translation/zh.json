@@ -10,6 +10,10 @@
         "tags":"標簽",
         "students":"學生",
         "submit":"提交",
-        "noData":"暫無資料"
+        "noData":"暫無資料",
+        "refNo":"編號",
+        "firstName":"名字",
+        "lastName":"姓氏",
+        "search":"搜尋"
     }
 }
