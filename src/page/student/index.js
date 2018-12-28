@@ -64,16 +64,15 @@ const styles = StyleSheet.create({
     backgroundColor:'#85A5FF',
     borderWidth:1,
     borderRadius:50,
-    flex:1,
-    // width:130,
-    // height:40,
+    width:'80%',
+    height:40,
     // 跟主轴方向对齐
     justifyContent:'center',
   },
   searchTouchText:{
     color:'#FFF',
     fontWeight:'bold',
-    alignSelf:'center'
+    alignSelf:'center',
   },
   searchRight:{
     flex:1
@@ -221,9 +220,9 @@ const styles = StyleSheet.create({
     height:30,
     backgroundColor:'#85A5FF',
     borderRadius:20,
+    justifyContent:'center'
   },
   tabSubmitText:{
-    top:5,
     color:'#FFF',
     fontWeight:'bold',
     textAlign:'center'
@@ -270,8 +269,8 @@ let currentDirectoryGroups=[];
 
 export default class Index extends Component {
 
-  constructor(props){
-    super(props);
+  constructor(){
+    super();
     this.state = {
       // 暂存目录数据
       directories:[],
@@ -294,11 +293,14 @@ export default class Index extends Component {
       getStudentStatus:false,
       // 是否显示搜索
       searchStatus:false,
-      // 默认搜索类型
-      selectSearchValue:'refNo'
+      // 搜索类型
+      searchType:'refNo',
+      // 搜索值
+      searchValue:'',
     }
     // 存储首次获取的年份
     yearId = global.yearId;
+
     this.updateGroupFilter = this.updateGroupFilter.bind(this);
     this.updatePullDownSelectStatus = this.updatePullDownSelectStatus.bind(this);
     this.storeCurrentDirectoryGroups = this.storeCurrentDirectoryGroups.bind(this);
@@ -350,6 +352,13 @@ export default class Index extends Component {
   async _getStudents(){
     let url='?pageSize=50';
     let params={};
+
+    // 存在搜索值
+    if(this.state.searchValue !=''){
+      params[this.state.selectSearchValue]={
+        "$regex":this.state.searchValue
+      };
+    }
 
     // 选择当前目录下的所有组
     if(selectGroupId == -1){
@@ -441,6 +450,8 @@ export default class Index extends Component {
     this._getStudents();
   }
 
+  
+
   // 存储当前选择目录下的所有组
   storeCurrentDirectoryGroups(data){
     currentDirectoryGroups = data;
@@ -479,12 +490,22 @@ export default class Index extends Component {
     this.setState({
       selectTagIds:selectTagIds
     });
+  }
+
+  // 确认搜索
+  _submitSearch(){
     this._getStudents();
+    // 隐藏筛选面板
+    this.setState({
+      searchStatus:false
+    });
   }
 
 
-  // 确认筛选的tag，此处只是隐藏筛选tag面板
+  // 确认筛选的tag
   _submitTag(){
+    this._getStudents();
+    // 隐藏筛选面板
     this.updatePullDownSelectStatus(false);
   }
 
@@ -671,7 +692,9 @@ export default class Index extends Component {
             )}
             rightBody={
               <View style={styles.navigationRightBody}>
-                <TouchableOpacity style={styles.navigationRightIconTouch} onPress={()=>this.setState({searchStatus:true})}>
+                <TouchableOpacity 
+                  style={styles.navigationRightIconTouch} 
+                  onPress={()=>this.setState({searchStatus:true})}>
                   <Image style={styles.navigationRightIcon} source={require(iconUri+'/search.png')} />
                 </TouchableOpacity>
               </View>
@@ -749,11 +772,13 @@ export default class Index extends Component {
                                 </Picker>
                               </View>
                               <View style={styles.searchInput}>
-                                <TextInput style={styles.searchTextInput}></TextInput>
+                                <TextInput style={styles.searchTextInput} onChangeText={(text)=>this.setState({searchValue:text})}>
+                                  {this.state.searchValue}
+                                </TextInput>
                               </View>
                             </View>
 
-                            <TouchableOpacity style={styles.searchTouch}>
+                            <TouchableOpacity style={styles.searchTouch} onPress={()=>this._submitSearch()}>
                               <Text style={styles.searchTouchText}>{I18n.t('student.search')}</Text>
                             </TouchableOpacity>
 
