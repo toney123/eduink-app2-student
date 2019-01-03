@@ -350,7 +350,7 @@ export default class Index extends Component {
 
   // 获取学生
   async _getStudents(){
-    let url='?pageSize=50';
+    let url='?pageSize=50&populate=_class,tags';
     let params={};
 
     // 存在搜索值
@@ -393,7 +393,7 @@ export default class Index extends Component {
       url = url +'&q='+ JSON.stringify(params);
     }
 
-  
+
     try {
       let response = await fetch(host+'/sis/students'+url, {
         method: "GET",
@@ -559,6 +559,7 @@ export default class Index extends Component {
       menuGroupName = selectGroupName;
     }
 
+
     // 选项栏打开
     if(this.state.pullDownSelectBodyStatus.open){
       // 第一个选项面板
@@ -648,8 +649,16 @@ export default class Index extends Component {
             ListEmptyComponent={<Text style={styles.studentListTip}>{I18n.t('student.noData')}</Text>}
             keyExtractor={(item,index)=>item._id.toString()}
             renderItem={({item,index}) => {
+              let className = item._class != null ? item._class.name :'';
+              
               return(
-                <TouchableOpacity style={styles.mainBody}>
+                <TouchableOpacity style={styles.mainBody} 
+                  onPress={()=>this.props.navigation.navigate('Detail',{
+                      id:item._id,
+                      name:item.firstName +' '+item.lastName,
+                      tags:item.tags,
+                      className:className
+                })}>
                   <View style={styles.mainBodyLeft}>
                     <Image style={styles.mainBodyLeftIamge} source={require(imageUri+'/avatar-default.jpg')}></Image>
                   </View>
@@ -658,7 +667,7 @@ export default class Index extends Component {
                       <Text style={styles.mainBodyCenterUserName}>{item.firstName +' '+item.lastName}</Text>
                     </View>
                     <View style={styles.mainBodyCenterBottom}>
-                      <Text style={styles.mainBodyCenterClassName}>class</Text>
+                      <Text style={styles.mainBodyCenterClassName}>{className}</Text>
                     </View>
                     
                   </View>

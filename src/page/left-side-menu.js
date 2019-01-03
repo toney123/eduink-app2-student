@@ -287,7 +287,10 @@ export default class LeftSideMenu extends Component{
                 </View>
             )}>
                 <View style={styles.container}>
-                    <Page updateSideMenuStatus={this.updateSideMenuStatus} />
+                    <Page 
+                        navigation = {this.props.navigation}
+                        updateSideMenuStatus={this.updateSideMenuStatus} 
+                    />
                 </View>
             </SideMenu>
         );
