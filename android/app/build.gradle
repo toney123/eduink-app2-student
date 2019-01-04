@@ -137,6 +137,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-syan-image-picker')
     compile project(':react-native-gesture-handler')
     compile project(':react-native-languages')
     implementation fileTree(dir: "libs", include: ["*.jar"])

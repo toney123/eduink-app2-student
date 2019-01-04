@@ -3,14 +3,14 @@
  */
 "use strict";
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View,TouchableOpacity,Image,Dimensions,ScrollView,TextInput} from 'react-native';
+import {Platform, StyleSheet, Text, View,TouchableOpacity,Image,Dimensions,ScrollView,TextInput,Button} from 'react-native';
 import Navigation from '../common/navigation';
 import ScrollableTabView,{DefaultTabBar, ScrollableTabBar} from 'react-native-scrollable-tab-view';
 import {host,schoolId,sessionToken} from '../../util/constant';
 import I18n from '../../language/i18n';
 import {RadioGroup, RadioButton} from 'react-native-flexi-radio-button';
 import DatePicker from 'react-native-datepicker';
-
+import SYImagePicker from 'react-native-syan-image-picker';
 
 const iconUri = '../../image/icon';
 const imageUri = '../../image/';
@@ -94,6 +94,10 @@ export default class Profile extends Component{
             structure:[],
             // 选项类型
             selection:0,
+            // 日期
+            date:'',
+            // 头像资源地址
+            avatarUri:''
         }
     }
 
@@ -123,6 +127,20 @@ export default class Profile extends Component{
         } catch (error) {
             console.error(error);
         }
+    }
+
+    // 图片上传
+    _imageUpload(){
+        SYImagePicker.showImagePicker(
+            {imageCount: 1, isRecordSelected: true, isCrop: true, showCropCircle: true}, 
+            (err, photos) => {
+            console.warn(err, photos);
+            if (!err) {
+                // this.setState({
+                //     photos
+                // })
+            }
+        });
     }
 
 
@@ -161,7 +179,7 @@ export default class Profile extends Component{
                         valueBody=(
                             <DatePicker
                                 style={{width: 200}}
-                                // date={this.state.date}
+                                date={this.state.date}
                                 mode="date"
                                 placeholder="select date"
                                 format="YYYY-MM-DD"
@@ -169,6 +187,10 @@ export default class Profile extends Component{
                                 confirmBtnText="Confirm"
                                 cancelBtnText="Cancel"
                                 customStyles={{
+                                    dateText:{
+                                        alignSelf:'flex-start',
+                                        marginLeft:5
+                                    },
                                     placeholderText:{
                                         alignSelf:'flex-start',
                                         color:'#9B9B9B',
@@ -180,12 +202,18 @@ export default class Profile extends Component{
                                         height:30
                                     }
                                 }}
-                                // onDateChange={(date) => {this.setState({date: date})}}
+                                onDateChange={(date) => {this.setState({date: date})}}
                             />
                         );
                     }else if(item.type == 'TextInput'){
                         valueBody=(
                             <TextInput style={{borderWidth:1,borderRadius:5,borderColor:'#DFDFDF',paddingTop:0,paddingBottom:0,marginTop:5}}></TextInput>
+                        );
+                    }else if(item.type == 'Upload'){
+                        valueBody=(
+                            <TouchableOpacity onPress={()=>this._imageUpload()} style={{borderWidth:1,borderColor:'#85A5FF',borderRadius:5,alignItems:'center',justifyContent:'center',marginTop:5,marginBottom:5,width:'20%'}}>
+                                <Text style={{color:'#85A5FF'}}>upload</Text>
+                            </TouchableOpacity>
                         );
                     }
                     insideBody.push(
