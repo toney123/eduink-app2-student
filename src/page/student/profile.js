@@ -82,8 +82,8 @@ const styles = StyleSheet.create({
     }
 });
 
-
-// I18n.currentLocale();
+// 存储结构里的每项数据
+let structureData=[];
 
 export default class Profile extends Component{
 
@@ -103,7 +103,8 @@ export default class Profile extends Component{
 
 
     componentWillMount(){
-        this._getFullStructure();
+        // 获取学生profile 结构里的数据
+        this._getStructureData();
     }
 
     // 获取学生的所有信息输入框类型和值
@@ -128,6 +129,38 @@ export default class Profile extends Component{
             console.error(error);
         }
     }
+
+    // 获取学生信息的数据
+    async _getStructureData(){
+        // 获取父组件传来的学生id
+       const studentId = this.props.navigation.getParam('id');
+        let param = JSON.stringify({
+            'user':studentId,
+            'profileDefinition':'Student'
+        });
+
+       try {
+            let response = await fetch(host+'/sis/user-profiles?q='+param, {
+                method: "GET",
+                headers: {
+                    'X-App-Id': schoolId,
+                    'X-Session-Token': sessionToken
+                },
+            });
+
+            let data = JSON.parse(response._bodyInit);
+
+            if(response.status == 200){
+                // 存储profile 结构里的每项数据
+                structureData = data;
+                // 获取学生profile 结构
+                this._getFullStructure();
+                
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }   
 
     // 图片上传
     _imageUpload(){
@@ -154,6 +187,7 @@ export default class Profile extends Component{
                 
                 let insideBody=[];
                 for (const item of data.items) {
+                    // item._id 选项id
                     let valueBody;
                     if(item.type == 'Selection'){
                         let options=[];

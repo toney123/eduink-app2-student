@@ -128,7 +128,7 @@ export default class Detail extends Component{
     }
 
     componentWillMount(){
-
+        
     }
 
     // 通过关键字转换对应的颜色样式
@@ -201,7 +201,9 @@ export default class Detail extends Component{
                     </View>
                 </View>
                 <View style={styles.containerBottom}>
-                    <TouchableOpacity style={styles.list} onPress={()=>this.props.navigation.navigate('Profile',)}>
+                    <TouchableOpacity style={styles.list} onPress={()=>this.props.navigation.navigate('Profile',{
+                        id:this.props.navigation.getParam('id')
+                    })}>
                         <View style={styles.listLeft}>
                             <Image style={styles.listSignIcon} source={require(iconUri+'/profile.png')}></Image>
                         </View>
